@@ -6,11 +6,21 @@ import DialogActions from "@mui/material/DialogActions";
 import DialogContent from "@mui/material/DialogContent";
 import DialogContentText from "@mui/material/DialogContentText";
 import DialogTitle from "@mui/material/DialogTitle";
-import { Checkbox, FormControlLabel, styled } from "@mui/material";
+import {
+  AlertColor,
+  Checkbox,
+  FormControlLabel,
+  IconButton,
+  Stack,
+  styled,
+} from "@mui/material";
 import { Form, Formik } from "formik";
 import * as yup from "yup";
 import api from "../../pages/api/api";
 import CustomizedSnackbar from "./customizedSnackbar";
+import { useState } from "react";
+import { number } from "yup";
+import router from "next/router";
 
 export default function AddItem({
   showAdd,
@@ -27,7 +37,15 @@ export default function AddItem({
 		border: 1px solid ${theme.palette.secondary.main};
 		`
   );
-
+  const [showSnackbarProps, setShowSnackbarProps] = useState<{
+    open: boolean;
+    severity: AlertColor;
+    message: string;
+  }>({
+    open: false,
+    message: "",
+    severity: "info",
+  });
   const validationSchema = yup.object({
     categoryID: yup.number().required().min(1),
     name: yup.string().required(),
@@ -35,80 +53,59 @@ export default function AddItem({
     baseQuantity: yup.number().required(),
   });
 
+  const addItemPost = async (values: any, setItems: any) => {
+    const auth = localStorage.getItem("authToken");
+    console.log("authToken =>", auth);
+    if (auth) {
+      console.log("adding image", values);
+      try {
+        const { status } = await api.post(
+          "/api/store-manager/item",
+          {
+            category: values.categoryID,
+            name: values.name,
+            price: values.price,
+            inStock: values.inStock,
+            baseQuantity: values.baseQuantity.toString(),
 
+            imageId: 52,
+          },
+          {
+            headers: {
+              Authorization: auth,
+            },
+          }
+        );
+        if (status == 201) {
+          setShowSnackbarProps({
+            open: true,
+            severity: "success",
+            message: "item added successfully",
+          });
 
+          setItems([]);
+        }
+      } catch (error: any) {
+        setShowSnackbarProps({
+          open: true,
+          severity: "warning",
+          message: "item cant be  added ",
+        });
+      }
+    }
+  };
 
-   const addItemHandler = async (
-     values: any,
-     setItems: any,
-   ) => {
-     const auth = localStorage.getItem("authToken");
-     console.log("authToken =>", auth);
-     if (auth) {
-       console.log("adding image", values);
-       try {
-         const { status } = await api.post(
-           "/api/store-manager/item",
-           {
-             category: values.categoryID,
-             name: values.name,
-             price: values.price,
-             inStock: values.inStock,
-             baseQuantity: values.baseQuantity.toString(),
-             // imageId: out.body.imgID,
-             imageId: 22,
-           },
-           {
-             headers: {
-               Authorization: auth,
-             },
-           }
-         );
-         if (status == 201) {
-          //  customizedSnackbar("Item added successfully", "success");
-           setItems([]);
-         }
-       } catch (error: any) {
-        //  customizedSnackbar(error.message, "error");
-       }
-     }
-   };
+  async function PostImage(item: any, value: string) {
+    try {
+      const rest2 = await api.post("/api/store-manager/image/:imageType");
 
-   const addItemPost = async (
-     values: any,
-     setItems: any,
-     customizedSnackbar: any
-   ) => {
-     const auth = localStorage.getItem("authToken");
-     console.log("authToken =>", auth);
-     if (auth) {
-       console.log("adding image", values);
-       try {
-
-         const { status } = await api.post(
-           "/api/store-manager/item",
-           {
-             category: values.categoryID,
-             name: values.name,
-             price: values.price,
-             inStock: values.inStock,
-             baseQuantity: values.baseQuantity.toString(),
-             // imageId: out.body.imgID,
-             imageId: 22,
-           },
-           {
-             headers: {
-               Authorization: auth,
-             },
-           }
-         );
-         if (status == 201) {
-           setItems([]);
-         }
-       } catch (error: any) {
-       }
-     }
-   };
+      if (rest2.status == 200) {
+        console.log(rest2);
+      }
+    } catch (error: any) {
+      console.log("error");
+    }
+  }
 
   return (
     <Dialog open={showAdd} onClose={() => setShowAdd(false)}>
@@ -121,14 +118,23 @@ export default function AddItem({
           inStock: true,
           price: 100,
           baseQuantity: 10,
+          imageid: number,
           itemImageLinks: undefined,
         }}
+        validate={(values) => {
+          console.log(values);
+        }}
         onSubmit={(values) => {
-          <CustomizedSnackbar />;
+          // <CustomizedSnackbar
+          //   {...showSnackbarProps}
+          //   handleClose={() =>
+          //     setShowSnackbarProps((p) => ({ ...p, open: false }))
+          //   }
+          // />;
 
           console.log(values);
           setShowAdd(false);
-          addItemHandler(values, setItems);
+          addItemPost(values, setItems);
         }}
         validationSchema={validationSchema}
       >
@@ -209,24 +215,45 @@ export default function AddItem({
                 variant="standard"
               />
 
-              <TextField
+              <input
                 autoFocus
-                margin="dense"
                 id="itemImageLinks"
                 name="itemImageLinks"
                 type="file"
-                onChange={(event) =>
-                  setFieldValue("itemImageLinks", event.target.value[0])
-                }
-                helperText="Image"
-                variant="standard"
+                onChange={(event) => {
+                  setFieldValue("itemImageLinks", event.target.files[0]);
+                  console.log(values.itemImageLinks);
+                }}
               />
+              {values.itemImageLinks && (
+                <Stack direction="row" alignItems="center" spacing={2}>
+                  <Button
+                    variant="contained"
+                    component="label"
+                    sx={{ marginTop: 2 }}
+                    onClick={async () => {
+                      await PostImage(item, value);
+                    }}
+                  >
+                    Upload
+                  </Button>
+                  <IconButton
+                    color="primary"
+                    aria-label="upload picture"
+                    component="label"
+                  >
+                    <input hidden accept="image/*" type="file" />
+                    {/* <PhotoCamera /> */}
+                  </IconButton>
+                </Stack>
+              )}
             </DialogContent>
             <DialogActions>
               <MyButton onClick={() => setShowAdd(false)}>Cancel</MyButton>
               <MyButton type="submit" onClick={() => addItemPost}>
                 Add
               </MyButton>
+              ;
             </DialogActions>
           </Form>
         )}

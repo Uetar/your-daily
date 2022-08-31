@@ -22,15 +22,18 @@ import CustomizedSnackbar from "../shared/components/customizedSnackbar";
 const Login = () => {
   const [state, setState] = useState({ username: "", password: "" });
   const [showPassword, setShowPassword] = useState(false);
-  const [showSnackbar, setShowSnackbar] = useState(false);
+  const [showSnackbarProps, setShowSnackbarProps] = useState<{
+    open: boolean;
+    severity: AlertColor;
+    message: string;
+  }>({
+    open: false,
+    message: "",
+    severity: "info",
+  });
   const router = useRouter();
 
-  async function fetchUser(
-    username: string,
-    password: string,
-
-    router: NextRouter
-  ) {
+  async function fetchUser(username: string, password: string) {
     try {
       const rest = await api.post("api/sm-login", {
         email: username,
@@ -41,6 +44,12 @@ const Login = () => {
         const authToken = rest.data.Authorization;
         localStorage.setItem("authToken", authToken);
         console.log(authToken);
+        setShowSnackbarProps({
+          open: true,
+          severity: "success",
+          message: "authorization done login successfull",
+        });
+
         router.push({
           pathname: "/dashBoard",
           query: {
@@ -49,6 +58,11 @@ const Login = () => {
         });
       }
     } catch (error: any) {
+      setShowSnackbarProps({
+        open: true,
+        severity: "warning",
+        message: "authorization failed ",
+      });
       console.log("error");
     }
   }
@@ -59,7 +73,7 @@ const Login = () => {
         <Grid item sm={12}>
           <Toolbar
             sx={{
-              marginLeft: "100px",
+              marginLeft: "50px",
               marginTop: "24px",
             }}
           >
@@ -68,12 +82,12 @@ const Login = () => {
         </Grid>
         <Grid item sm={7}>
           <>
-            <Toolbar sx={{ marginTop: "90px", marginLeft: "165px" }}>
+            <Toolbar sx={{ marginTop: "40px", marginLeft: "65px" }}>
               <Image
                 src="/images/BgImage.png"
                 alt="backgroundImage"
                 width={725}
-                height={507}
+                height={490}
               />
             </Toolbar>
           </>
@@ -85,10 +99,10 @@ const Login = () => {
                 elevation={3}
                 sx={{
                   marginLeft: "25px",
-                  padding: 4,
-                  marginTop: "10px",
-                  height: "418px",
-                  width: "400px",
+                  padding: 2,
+                  marginTop: "40px",
+                  height: "400px",
+                  width: "380px",
                   backgroundColor: "white",
                 }}
               >
@@ -175,21 +189,31 @@ const Login = () => {
                     height: "12%",
                     marginBottom: "20px",
                     backgroundColor: "#F88A12",
+                    color: "#ffffff",
+                    "&:hover": {
+                      border: "0px",
+                      color: "gray",
+                      backgroundColor: "#F88A12",
+                    },
                   }}
                   onClick={async () => {
-                    setShowSnackbar(!showSnackbar);
-
-                    await fetchUser(state.username, state.password, router);
+                    await fetchUser(state.username, state.password);
                   }}
                 >
                   Log In
                 </Button>
-                <CustomizedSnackbar showSnackbar={showSnackbar} />
+
+                <CustomizedSnackbar
+                  {...showSnackbarProps}
+                  handleClose={() =>
+                    setShowSnackbarProps((p) => ({ ...p, open: false }))
+                  }
+                />
                 <Typography
                   variant="body1"
                   align="right"
                   sx={{
-                    marginRight: "10%",
+                    marginRight: "70px",
                     color: "#F88A12",
                   }}
                 >

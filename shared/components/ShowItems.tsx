@@ -20,7 +20,7 @@ interface itemType {
   inStock: boolean;
   price: number;
   baseQuantity: number;
-  itemImageLinks: any;
+  itemImageLinks: string[];
 }
 
 export const ShowItems = (props: any) => {

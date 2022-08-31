@@ -14,14 +14,14 @@ import Tabs from "../shared/components/Tabs";
 import { Grid } from "@mui/material";
 import DataTable from "../shared/components/Table";
 import { useState } from "react";
-import CustomizedSnackbar from "../shared/components/customizedSnackbar";
+// import CustomizedSnackbar from "../shared/components/customizedSnackbar";
 import { FetchData } from "../shared/components/Table";
-import Login from "../pages/login";
+// import Login from "../pages/login";
 
 const Dashboard = () => {
   const [showAdd, setShowAdd] = useState(false);
   const { items, setItems } = FetchData();
-  const [showSnackbar, setShowSnackbar] = useState(true);
+  const [showSnackbar, setShowSnackbar] = useState(false);
 
   return (
     <Box minHeight="100vh" sx={{ flexGrow: 1, background: "#ffcdca" }}>
@@ -45,7 +45,7 @@ const Dashboard = () => {
               sx={{ color: "#ffffff" }}
               onClick={() => {
                 window.localStorage.removeItem("authToken");
-                router.push("/login");
+                router.replace("/login");
               }}
             />
           </IconButton>
@@ -62,11 +62,7 @@ const Dashboard = () => {
             color="inherit"
             sx={{ color: "#F88A12", margin: 4, fontWeight: "bold" }}
             onClick={() => {
-              if (localStorage.getItem("authToken"))
-                router.push({
-                  pathname: "/dashBoard",
-                  query: { category: "all" },
-                });
+              if (localStorage.getItem("authToken")) router.back();
               else
                 router.push({
                   pathname: "/login",
@@ -92,7 +88,7 @@ const Dashboard = () => {
 
       <DataTable items={items} setItems={setItems} />
       <AddItem showAdd={showAdd} setShowAdd={setShowAdd} setItems={setItems} />
-      <CustomizedSnackbar showSnackbar={showSnackbar} />
+      {/* <CustomizedSnackbar showSnackbar={showSnackbar} /> */}
     </Box>
   );
 };

@@ -16,7 +16,7 @@ interface itemType {
 
 export default function FullWidthTabs({ items }: { items: itemType[] }) {
   const router = useRouter();
-  const MyTab = styled(Tab)(({ theme }) => ({
+  const MyTab = styled(Tab)(({ }) => ({
     fontWeight: "bold",
   }));
   return (
