@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, {  useState } from "react";
 import Table from "@mui/material/Table";
 import TableBody from "@mui/material/TableBody";
 import TableCell from "@mui/material/TableCell";
@@ -6,39 +6,12 @@ import TableContainer from "@mui/material/TableContainer";
 import TableHead from "@mui/material/TableHead";
 import TableRow from "@mui/material/TableRow";
 import styled from "@emotion/styled";
-import router, { NextRouter, useRouter } from "next/router";
+import  {  useRouter } from "next/router";
 import { AlertColor } from "@mui/material";
-import api from "../../pages/api/api";
 import { ShowItems } from "./ShowItems";
-import customizedSnackbar from "./customizedSnackbar";
 import Edit from "./Edit";
+import CustomizedSnackbar from "./customizedSnackbar";
 
-
-
-export const FetchData =() => {
-  const [items, setItems] = useState([]);
-  useEffect(() => {
-    const fetchData = async () => {
-      try {
-        const auth = localStorage.getItem("authToken");
-        if (auth) {
-          const { status, data } = await api.get("/api/store-manager/item", {
-            headers: {
-              Authorization: auth,
-            },
-          });
-          setItems(data);
-        } else {
-          router.push("/login");
-        }
-      } catch (error: any) {
-        console.log(error);
-      }
-    };
-    if (items.length == 0) fetchData();
-  }, [items]);
-  return { items, setItems };
-};
 
 
 interface itemType {
@@ -58,10 +31,6 @@ export default function BasicTable({
   items: any;
   setItems: any;
 }) {
-
-
-
-
   const [showEdit, setShowEdit] = useState({
     open: false,
     itemData: {
@@ -78,6 +47,24 @@ export default function BasicTable({
   {
     console.log(items);
   }
+  const [showSnackbarProps, setShowSnackbarProps] = useState<{
+    open: boolean;
+    severity: AlertColor;
+    message: string;
+  }>({
+    open: false,
+    message: "",
+    severity: "info",
+  });
+
+  const handleSnackbar = React.useCallback(() => {
+    setShowSnackbarProps({
+      open: true,
+      severity: "success",
+      message: "item edited successfully",
+    });
+  }, []);
+
   const router = useRouter();
   const tabValue = router.query.category;
 
@@ -86,9 +73,8 @@ export default function BasicTable({
     borderBottomColor: "white",
   });
 
-  //   const MyTableCell = styled(TableCell)({
-  //     borderBottomColor: "white",
-  //   });
+
+  
 
   return (
     <>
@@ -125,10 +111,20 @@ export default function BasicTable({
                 )
             )}
           </TableBody>
+          {showSnackbarProps.open && (
+            <CustomizedSnackbar
+              {...showSnackbarProps}
+              handleClose={() =>
+                setShowSnackbarProps((p: any) => ({ ...p, open: false }))
+              }
+            />
+          )}
         </Table>
       </TableContainer>
-      <Edit editState={showEdit} 
-      setEditState={setShowEdit}
+      <Edit
+        editState={showEdit}
+        setEditState={setShowEdit}
+        handleSnackbar={handleSnackbar}
       />
     </>
   );

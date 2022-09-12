@@ -1,15 +1,13 @@
-// import Head from "next/head";
-// import Image from "next/image";
-// import styles from '../styles/Home.module.css'
-import dashBoard from "./dashBoard";
-import React from "react";
-import Login from "./login";
+import { useRouter } from "next/router";
+import { useEffect } from "react";
 
 const Home = () => {
-  return (
-    <>
-      <Login />
-    </>
-  );
+  
+	const router = useRouter();
+
+  useEffect(() => {
+    router.push("/login");
+  });
+  return <></>;
 };
 export default Home;

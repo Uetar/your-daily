@@ -1,11 +1,14 @@
-import { Person, Visibility, VisibilityOff } from "@mui/icons-material";
+import {
+  Password,
+  Person,
+  Visibility,
+  VisibilityOff,
+} from "@mui/icons-material";
 import { Box } from "@mui/system";
 import TextField from "@mui/material/TextField";
-import React, { useState } from "react";
+import React, {  useEffect, useState } from "react";
 import Image from "next/image";
 import { useRouter } from "next/router";
-import { NextRouter } from "next/router";
-import api from "./api/api";
 import {
   Grid,
   Toolbar,
@@ -17,58 +20,32 @@ import {
   InputAdornment,
   AlertColor,
 } from "@mui/material";
-import CustomizedSnackbar from "../shared/components/customizedSnackbar";
+import { UserContext } from "./userContext";
 
 const Login = () => {
   const [state, setState] = useState({ username: "", password: "" });
   const [showPassword, setShowPassword] = useState(false);
-  const [showSnackbarProps, setShowSnackbarProps] = useState<{
-    open: boolean;
-    severity: AlertColor;
-    message: string;
-  }>({
-    open: false,
-    message: "",
-    severity: "info",
-  });
+ 
   const router = useRouter();
 
-  async function fetchUser(username: string, password: string) {
-    try {
-      const rest = await api.post("api/sm-login", {
-        email: username,
-        password: password,
-      });
+  const { authToken } = React.useContext(UserContext);
 
-      if (rest.status == 200) {
-        const authToken = rest.data.Authorization;
-        localStorage.setItem("authToken", authToken);
-        console.log(authToken);
-        setShowSnackbarProps({
-          open: true,
-          severity: "success",
-          message: "authorization done login successfull",
-        });
-
-        router.push({
-          pathname: "/dashBoard",
-          query: {
-            category: "all",
-          },
-        });
-      }
-    } catch (error: any) {
-      setShowSnackbarProps({
-        open: true,
-        severity: "warning",
-        message: "authorization failed ",
+  useEffect(() => {
+    if (authToken) {
+      router.push({
+        pathname: "/dashBoard",
+        query: {
+          category: "all",
+        },
       });
-      console.log("error");
     }
-  }
+  });
+  const { fetchUser } = React.useContext(UserContext);
+
+
 
   return (
-    <Box minHeight="100vh" sx={{ background: "#ffcdca" }}>
+    <Box minHeight="100vh">
       <Grid container>
         <Grid item sm={12}>
           <Toolbar
@@ -106,39 +83,29 @@ const Login = () => {
                   backgroundColor: "white",
                 }}
               >
-                <Typography
-                  variant="h4"
-                  align="left"
-                  sx={{
-                    marginTop: "30px",
-                    marginLeft: "10px",
-                  }}
-                >
+                <Typography variant="h4" align="left">
                   Log In
                 </Typography>
-                <Typography
-                  variant="h6"
-                  align="left"
-                  sx={{ marginLeft: "10px", marginBottom: "30px" }}
-                >
+                <Typography variant="h6" align="left">
                   Please login to your account
                 </Typography>
 
                 <FormControl
                   variant="outlined"
                   sx={{
-                    width: "80%",
+                    width: "95%",
                     marginBottom: "20px",
                   }}
                 >
                   <TextField
+                    focused
                     label="UserName"
                     color="secondary"
                     placeholder="enter your user id"
                     onChange={(e) => {
                       setState({ ...state, username: e.target.value });
 
-                      console.log(e.target.value);
+                      // console.log(e.target.value);
                     }}
                     value={state.username}
                     InputProps={{
@@ -154,17 +121,18 @@ const Login = () => {
                 <FormControl
                   variant="outlined"
                   sx={{
-                    width: "80%",
+                    width: "95%",
                     marginBottom: "20px",
                   }}
                 >
                   <TextField
+                    focused
                     label="Password"
                     color="secondary"
                     placeholder="enter your password"
                     onChange={(e) => {
                       setState({ ...state, password: e.target.value });
-                      console.log(e.target.value);
+                      // console.log(e.target.value);
                     }}
                     type={showPassword ? "text" : "password"}
                     value={state.password}
@@ -185,16 +153,10 @@ const Login = () => {
 
                 <Button
                   sx={{
-                    width: "80%",
+                    width: "95%",
                     height: "12%",
                     marginBottom: "20px",
-                    backgroundColor: "#F88A12",
-                    color: "#ffffff",
-                    "&:hover": {
-                      border: "0px",
-                      color: "gray",
-                      backgroundColor: "#F88A12",
-                    },
+               
                   }}
                   onClick={async () => {
                     await fetchUser(state.username, state.password);
@@ -202,18 +164,11 @@ const Login = () => {
                 >
                   Log In
                 </Button>
-
-                <CustomizedSnackbar
-                  {...showSnackbarProps}
-                  handleClose={() =>
-                    setShowSnackbarProps((p) => ({ ...p, open: false }))
-                  }
-                />
                 <Typography
                   variant="body1"
                   align="right"
                   sx={{
-                    marginRight: "70px",
+                    marginRight: "18px",
                     color: "#F88A12",
                   }}
                 >

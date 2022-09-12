@@ -1,11 +1,17 @@
-import '../styles/globals.css'
-import { CssBaseline } from "@mui/material";
+import "../styles/globals.css";
+import { CssBaseline, ThemeProvider } from "@mui/material";
 import React from "react";
+import { theme } from "../shared/theme";
+import { Context } from "./userContext";
 function MyApp({ Component, pageProps }) {
   return (
     <>
-      <CssBaseline />
-      <Component {...pageProps} />
+      <Context>
+        <ThemeProvider theme={theme}>
+          <CssBaseline />
+          <Component {...pageProps} />
+        </ThemeProvider>
+      </Context>
     </>
   );
 }

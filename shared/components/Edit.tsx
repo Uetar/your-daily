@@ -10,63 +10,7 @@ import { Checkbox, FormControlLabel, Input, styled } from "@mui/material";
 import * as yup from "yup";
 import { Formik, Form } from "formik";
 import api from "../../pages/api/api";
-
-
-
-interface itemType {
-  id: number;
-  name: string;
-  categoryID: number;
-  inStock: boolean;
-  price: number;
-  baseQuantity: number;
-  itemImageLinks: any;
-}
-const handleEdit = async (
-  values: itemType,
-  setItemData: any,
-) => {
-  const auth = localStorage.getItem("authToken");
-  if (auth) {
-    try {
-
-      const res = await api.put(
-        `/api/store-manager/item/${values.id}`,
-        {
-          category: values.categoryID,
-          inStock: values.inStock,
-          name: values.name,
-          price: values.price,
-          baseQuantity: values.baseQuantity.toString(),
-        },
-        {
-          headers: {
-            Authorization: auth,
-          },
-        }
-      );
-      if (res.status == 201) {
-        setItemData({
-          ...values,
-          categoryID: values.categoryID,
-        //   itemImageLinks: out.data.imageURL,
-          inStock: values.inStock,
-          name: values.name,
-          price: values.price,
-          baseQuantity: values.baseQuantity.toString(),
-        });
-      }
-    } catch (error: any) {
-    }
-  }
-};
-
-
-
-
-
-
-
+import { UserContext } from "../../pages/userContext";
 
 interface itemType {
   id: number;
@@ -78,9 +22,10 @@ interface itemType {
   itemImageLinks: any;
 }
 
-export  default function Edit({
+export default function Edit({
   editState,
   setEditState,
+  handleSnackbar,
 }: {
   editState: {
     open: boolean;
@@ -88,8 +33,8 @@ export  default function Edit({
     setItemData: any;
   };
   setEditState: any;
+  handleSnackbar: Function;
 }) {
-
   const MyButton = styled(Button)(
     ({ theme }) => `
     color: ${theme.palette.secondary.main};
@@ -103,6 +48,42 @@ export  default function Edit({
     price: yup.number().required(),
     baseQuantity: yup.number().required(),
   });
+   const { authToken } = React.useContext(UserContext);
+
+  const handleEdit = async (values: itemType, setItemData: any) => {
+    const auth = authToken;
+    if (auth) {
+      try {
+        const res = await api.put(
+          `/api/store-manager/item/${values.id}`,
+          {
+            category: values.categoryID,
+            inStock: values.inStock,
+            name: values.name,
+            price: values.price,
+            baseQuantity: values.baseQuantity.toString(),
+          },
+          {
+            headers: {
+              Authorization: auth,
+            },
+          }
+        );
+        if (res.status == 201) {
+          handleSnackbar();
+          setItemData({
+            ...values,
+            categoryID: values.categoryID,
+            //   itemImageLinks: out.data.imageURL,
+            inStock: values.inStock,
+            name: values.name,
+            price: values.price,
+            baseQuantity: values.baseQuantity.toString(),
+          });
+        }
+      } catch (error: any) {}
+    }
+  };
 
   return (
     <div>
@@ -135,7 +116,7 @@ export  default function Edit({
                   All details are mandatory to fill.
                 </DialogContentText>
                 <TextField
-                  autoFocus
+                  focused
                   margin="dense"
                   id="categoryID"
                   label="categoryID"
@@ -148,7 +129,7 @@ export  default function Edit({
                   variant="standard"
                 />
                 <TextField
-                  autoFocus
+                  focused
                   margin="dense"
                   id="name"
                   label="Name"
@@ -162,7 +143,7 @@ export  default function Edit({
                 />
 
                 <TextField
-                  autoFocus
+                  focused
                   margin="dense"
                   id="price"
                   label="Price(per base Qty)"
@@ -187,7 +168,7 @@ export  default function Edit({
                   sx={{ ml: 0, mt: 1 }}
                 />
                 <TextField
-                  autoFocus
+                  focused
                   margin="dense"
                   id="baseQuantity"
                   label="Base Qty"
@@ -200,24 +181,18 @@ export  default function Edit({
                   variant="standard"
                 />
 
-                <TextField
-                  autoFocus
-                  margin="dense"
+                <input
                   id="itemImageLinks"
                   name="itemImageLinks"
                   type="file"
                   onChange={(event) =>
-                    setFieldValue("itemImageLinks", event.target.value[0])
+                    setFieldValue("itemImageLinks", event.target.files[0])
                   }
-                  helperText="Image"
-                  variant="standard"
                 />
               </DialogContent>
               <DialogActions>
                 <MyButton
-                  onClick={() =>
-                    setEditState({ open: false, itemData: {} })
-                  }
+                  onClick={() => setEditState({ open: false, itemData: {} })}
                 >
                   Cancel
                 </MyButton>

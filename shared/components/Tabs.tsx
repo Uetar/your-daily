@@ -16,11 +16,12 @@ interface itemType {
 
 export default function FullWidthTabs({ items }: { items: itemType[] }) {
   const router = useRouter();
-  const MyTab = styled(Tab)(({ }) => ({
+  const MyTab = styled(Tab)(({}) => ({
     fontWeight: "bold",
   }));
   return (
     <Tabs
+    
       value={router.query.category ?? "all"}
       onChange={(e, newValue) => {
         router.push({
@@ -29,30 +30,12 @@ export default function FullWidthTabs({ items }: { items: itemType[] }) {
           },
         });
       }}
-      indicatorColor="secondary"
-      textColor="secondary"
       centered
     >
-      <MyTab
-        value={"all"}
-        label="all"
-        id="tab-0"
-      />
-      <MyTab
-        value={"vegetables"}
-        label="Vegetables"
-        id="tab-1"
-      />
-      <MyTab
-        value={"fruits"}
-        label="Fruits"
-        id="tab-2"
-      />
-      <MyTab
-        value={"others"}
-        label="Others"
-        id="tab-3"
-      />
+      <MyTab value={"all"} label="all" id="tab-0" />
+      <MyTab value={"vegetables"} label="Vegetables" id="tab-1" />
+      <MyTab value={"fruits"} label="Fruits" id="tab-2" />
+      <MyTab value={"others"} label="Others" id="tab-3" />
     </Tabs>
   );
 }

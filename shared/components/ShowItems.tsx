@@ -11,7 +11,7 @@ import DeleteIcon from "@mui/icons-material/Delete";
 import EditIcon from "@mui/icons-material/Edit";
 import Image from "next/image";
 import api from "../../pages/api/api";
-import Edit from "../components/Edit";
+import { UserContext } from "../../pages/userContext";
 
 interface itemType {
   id: number;
@@ -31,7 +31,51 @@ export const ShowItems = (props: any) => {
   const { item, setItems, showEdit, setShowEdit } = props;
   const [itemData, setItemData] = useState(item);
 
-  console.log(item);
+ const { authToken } = React.useContext(UserContext);
+  const deleteHandler = async (id: number, setItems: any) => {
+    const auth = authToken;
+    try {
+      if (auth) {
+        await api.delete(`/api/store-manager/item/${id}`, {
+          headers: {
+            Authorization: auth,
+          },
+        });
+        setItems([]);
+      }
+    } catch (error: any) {}
+  };
+
+  const checkboxHandler = async (
+    itemData: itemType,
+    setItemData: any,
+    setItems: any
+  ) => {
+    const auth = authToken; 
+    try {
+      if (auth) {
+        const res = await api.put(
+          `/api/store-manager/item/${itemData.id}`,
+          {
+            category: itemData.categoryID,
+            imageId: itemData.itemImageLinks,
+            inStock: !itemData.inStock,
+            name: itemData.name,
+            price: itemData.price,
+            baseQuantity: itemData.baseQuantity,
+            strikeThroughPrice: 100,
+          },
+          {
+            headers: {
+              Authorization: auth,
+            },
+          }
+        );
+        setItemData({ ...itemData, inStock: !itemData.inStock });
+      }
+    } catch (error: any) {}
+  };
+
   return (
     <>
       <TableRow key={itemData.id}>
@@ -78,49 +122,4 @@ export const ShowItems = (props: any) => {
       </TableRow>
     </>
   );
-};
-
-const deleteHandler = async (id: number, setItems: any) => {
-  const auth = localStorage.getItem("authToken");
-  try {
-    if (auth) {
-      await api.delete(`/api/store-manager/item/${id}`, {
-        headers: {
-          Authorization: auth,
-        },
-      });
-      setItems([]);
-    }
-  } catch (error: any) {}
-};
-
-const checkboxHandler = async (
-  itemData: itemType,
-  setItemData: any,
-  setItems: any
-) => {
-  const auth = localStorage.getItem("authToken");
-  try {
-    if (auth) {
-      const res = await api.put(
-        `/api/store-manager/item/${itemData.id}`,
-        {
-          category: itemData.categoryID,
-          imageId: itemData.itemImageLinks,
-          inStock: !itemData.inStock,
-          name: itemData.name,
-          price: itemData.price,
-          baseQuantity: itemData.baseQuantity,
-          strikeThroughPrice: 100,
-        },
-        {
-          headers: {
-            Authorization: auth,
-          },
-        }
-      );
-      setItemData({ ...itemData, inStock: !itemData.inStock });
-      // setItems([])
-    }
-  } catch (error: any) {}
 };

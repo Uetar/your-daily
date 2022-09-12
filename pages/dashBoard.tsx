@@ -6,25 +6,75 @@ import Typography from "@mui/material/Typography";
 import Button from "@mui/material/Button";
 import IconButton from "@mui/material/IconButton";
 import LogoutIcon from "@mui/icons-material/Logout";
+
 import PersonAddAltIcon from "@mui/icons-material/PersonAddAlt";
 import router from "next/router";
 import AddItem from "../shared/components/AddItem";
 import Image from "next/image";
 import Tabs from "../shared/components/Tabs";
-import { Grid } from "@mui/material";
+import { AlertColor, Grid } from "@mui/material";
 import DataTable from "../shared/components/Table";
-import { useState } from "react";
-// import CustomizedSnackbar from "../shared/components/customizedSnackbar";
-import { FetchData } from "../shared/components/Table";
-// import Login from "../pages/login";
+import { useState, useEffect } from "react";
+import CustomizedSnackbar from "../shared/components/customizedSnackbar";
+import { UserContext } from "./userContext";
+import api from "./api/api";
+
+export const FetchData = () => {
+  const [items, setItems] = useState([]);
+  const { authToken } = React.useContext(UserContext);
+  useEffect(() => {
+    const FetchData = async () => {
+      try {
+        if (authToken) {
+          const { data } = await api.get("/api/store-manager/item", {
+            headers: {
+              Authorization: authToken,
+            },
+          });
+          setItems(data);
+        } else {
+          router.push("/login");
+        }
+      } catch (error: any) {
+        console.log(error);
+      }
+    };
+    if (items.length == 0) FetchData();
+  }, [authToken, items]);
+  return { items, setItems };
+};
 
 const Dashboard = () => {
   const [showAdd, setShowAdd] = useState(false);
   const { items, setItems } = FetchData();
-  const [showSnackbar, setShowSnackbar] = useState(false);
+  const [showSnackbarProps, setShowSnackbarProps] = useState<{
+    open: boolean;
+    severity: AlertColor;
+    message: string;
+  }>({
+    open: false,
+    message: "",
+    severity: "info",
+  });
 
+  const handleSnackbar = React.useCallback(() => {
+    setShowSnackbarProps({
+      open: true,
+      severity: "success",
+      message: "item added successfully",
+    });
+  }, []);
+  const { logOut } = React.useContext(UserContext);
+  function HandleLogOut() {
+    logOut();
+    router.replace("/login");
+  }
+  const { authToken } = React.useContext(UserContext);
+  function handleBack() {
+    authToken ? router.back() : router.replace("/login");
+  }
   return (
-    <Box minHeight="100vh" sx={{ flexGrow: 1, background: "#ffcdca" }}>
+    <Box minHeight="100vh" sx={{ flexGrow: 1 }}>
       <AppBar position="static" sx={{ backgroundColor: "#F88A12" }}>
         <Toolbar>
           <Image
@@ -33,7 +83,11 @@ const Dashboard = () => {
             height={41}
             width={50}
           />
-          <Typography variant="h6" component="div" sx={{ flexGrow: 1 }}>
+          <Typography
+            variant="h6"
+            component="div"
+            sx={{ flexGrow: 1, color: "#FFFFFF", margin: 2 }}
+          >
             Dashboard
           </Typography>
           <IconButton>
@@ -44,8 +98,7 @@ const Dashboard = () => {
               fontSize="medium"
               sx={{ color: "#ffffff" }}
               onClick={() => {
-                window.localStorage.removeItem("authToken");
-                router.replace("/login");
+                HandleLogOut();
               }}
             />
           </IconButton>
@@ -60,13 +113,9 @@ const Dashboard = () => {
           <Button
             variant="outlined"
             color="inherit"
-            sx={{ color: "#F88A12", margin: 4, fontWeight: "bold" }}
+            sx={{ margin: 4, fontWeight: "bold" }}
             onClick={() => {
-              if (localStorage.getItem("authToken")) router.back();
-              else
-                router.push({
-                  pathname: "/login",
-                });
+              handleBack();
             }}
           >
             back
@@ -77,18 +126,26 @@ const Dashboard = () => {
           <Button
             variant="outlined"
             color="inherit"
-            sx={{ color: "#F88A12", margin: 4, fontWeight: "bold" }}
             onClick={() => setShowAdd(true)}
           >
             + Add Items
           </Button>
         </Grid>
       </Grid>
+      <CustomizedSnackbar
+        {...showSnackbarProps}
+        handleClose={() =>
+          setShowSnackbarProps((p: any) => ({ ...p, open: false }))
+        }
+      />
       <Tabs items={items} />
-
       <DataTable items={items} setItems={setItems} />
-      <AddItem showAdd={showAdd} setShowAdd={setShowAdd} setItems={setItems} />
-      {/* <CustomizedSnackbar showSnackbar={showSnackbar} /> */}
+      <AddItem
+        showAdd={showAdd}
+        setShowAdd={setShowAdd}
+        setItems={setItems}
+        handleSnackbar={handleSnackbar}
+      />
     </Box>
   );
 };

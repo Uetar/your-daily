@@ -17,26 +17,22 @@ import {
 import { Form, Formik } from "formik";
 import * as yup from "yup";
 import api from "../../pages/api/api";
-import CustomizedSnackbar from "./customizedSnackbar";
 import { useState } from "react";
 import { number } from "yup";
 import router from "next/router";
+import { UserContext } from "../../pages/userContext";
 
 export default function AddItem({
   showAdd,
   setShowAdd,
   setItems,
+  handleSnackbar,
 }: {
   showAdd: boolean;
   setShowAdd: React.Dispatch<React.SetStateAction<boolean>>;
   setItems: any;
+  handleSnackbar: Function;
 }) {
-  const MyButton = styled(Button)(
-    ({ theme }) => `
-		color: ${theme.palette.secondary.main};
-		border: 1px solid ${theme.palette.secondary.main};
-		`
-  );
   const [showSnackbarProps, setShowSnackbarProps] = useState<{
     open: boolean;
     severity: AlertColor;
@@ -52,9 +48,10 @@ export default function AddItem({
     price: yup.number().required(),
     baseQuantity: yup.number().required(),
   });
+  const { authToken } = React.useContext(UserContext);
 
   const addItemPost = async (values: any, setItems: any) => {
-    const auth = localStorage.getItem("authToken");
+    const auth = authToken;
     console.log("authToken =>", auth);
     if (auth) {
       console.log("adding image", values);
@@ -77,12 +74,7 @@ export default function AddItem({
           }
         );
         if (status == 201) {
-          setShowSnackbarProps({
-            open: true,
-            severity: "success",
-            message: "item added successfully",
-          });
-
+          handleSnackbar();
           setItems([]);
         }
       } catch (error: any) {
@@ -106,7 +98,6 @@ export default function AddItem({
       console.log("error");
     }
   }
-
   return (
     <Dialog open={showAdd} onClose={() => setShowAdd(false)}>
       <DialogTitle>Add Item Details</DialogTitle>
@@ -124,17 +115,13 @@ export default function AddItem({
         validate={(values) => {
           console.log(values);
         }}
+        // onSubmit={addItemPost}
         onSubmit={(values) => {
-          // <CustomizedSnackbar
-          //   {...showSnackbarProps}
-          //   handleClose={() =>
-          //     setShowSnackbarProps((p) => ({ ...p, open: false }))
-          //   }
-          // />;
-
+          handleSnackbar();
           console.log(values);
           setShowAdd(false);
           addItemPost(values, setItems);
+          console.log("hello");
         }}
         validationSchema={validationSchema}
       >
@@ -145,7 +132,7 @@ export default function AddItem({
                 All details are mandatory to fill.
               </DialogContentText>
               <TextField
-                autoFocus
+                focused
                 margin="dense"
                 id="categoryID"
                 label="categoryID"
@@ -160,7 +147,7 @@ export default function AddItem({
                 variant="standard"
               />
               <TextField
-                autoFocus
+                focused
                 margin="dense"
                 id="name"
                 label="Name"
@@ -173,7 +160,7 @@ export default function AddItem({
                 variant="standard"
               />
               <TextField
-                autoFocus
+                focused
                 margin="dense"
                 id="price"
                 label="Price(per base Qty)"
@@ -182,6 +169,7 @@ export default function AddItem({
                 onChange={handleChange}
                 error={!!errors.price && touched.price}
                 helperText={!!errors.price && touched.price && errors.price}
+                sx={{ textTransform: "capitalize" }}
                 fullWidth
                 variant="standard"
               />
@@ -198,7 +186,7 @@ export default function AddItem({
                 sx={{ ml: 0, mt: 1 }}
               />
               <TextField
-                autoFocus
+                focused
                 margin="dense"
                 id="baseQuantity"
                 label="Base Qty"
@@ -216,13 +204,12 @@ export default function AddItem({
               />
 
               <input
-                autoFocus
                 id="itemImageLinks"
                 name="itemImageLinks"
                 type="file"
                 onChange={(event) => {
                   setFieldValue("itemImageLinks", event.target.files[0]);
-                  console.log(values.itemImageLinks);
+                  console.log(values);
                 }}
               />
               {values.itemImageLinks && (
@@ -231,9 +218,7 @@ export default function AddItem({
                     variant="contained"
                     component="label"
                     sx={{ marginTop: 2 }}
-                    onClick={async () => {
-                      await PostImage(item, value);
-                    }}
+                    onClick={async () => {}}
                   >
                     Upload
                   </Button>
@@ -249,11 +234,8 @@ export default function AddItem({
               )}
             </DialogContent>
             <DialogActions>
-              <MyButton onClick={() => setShowAdd(false)}>Cancel</MyButton>
-              <MyButton type="submit" onClick={() => addItemPost}>
-                Add
-              </MyButton>
-              ;
+              <Button onClick={() => setShowAdd(false)}>Cancel</Button>
+              <Button type="submit">Add</Button>
             </DialogActions>
           </Form>
         )}
